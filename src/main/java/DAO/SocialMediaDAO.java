@@ -57,15 +57,57 @@ public class SocialMediaDAO {
         return null;
     }
 
+    // Get Account username to check for duplication
+    public Account getAccountByUsername(String username) {
+        Connection connection = ConnectionUtil.getConnection();
+        try {
+            String sql = "SELECT * FROM Account WHERE username = ?";
+            PreparedStatement prpStmt = connection.prepareStatement(sql);
+            prpStmt.setString(1, username);
+            ResultSet usernameFound = prpStmt.executeQuery();
+            if (usernameFound.next()) {
+                Account userFound = new Account(usernameFound.getInt("account_id"),
+                        usernameFound.getString("username"),
+                        usernameFound.getString("password"));
+                return userFound;
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+        return null;
+    }
+
+    // Get User by ID for post Validation
+    public Account getAccountByID(int user_id) {
+        Connection connection = ConnectionUtil.getConnection();
+        try {
+            String sql = "SELECT * FROM Account WHERE account_id = ?";
+            PreparedStatement prpStmt = connection.prepareStatement(sql);
+            prpStmt.setInt(1, user_id);
+            ResultSet usernameFound = prpStmt.executeQuery();
+            if (usernameFound.next()) {
+                Account userFound = new Account(usernameFound.getInt("account_id"),
+                        usernameFound.getString("username"),
+                        usernameFound.getString("password"));
+                return userFound;
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+        return null;
+    }
+
     // Create New Message
     public Message createMessage(Message messagePost) {
         Connection connection = ConnectionUtil.getConnection();
         try {
-            String sql = "INSERT INTO Message (posted_by, message_text, time_posted_epoch) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO Message (posted_by, message_text, time_posted_epoch) VALUES (?, ?, ?)";
             PreparedStatement prpStmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            prpStmt.setInt(2, messagePost.getPosted_by());
-            prpStmt.setString(3, messagePost.getMessage_text());
-            prpStmt.setLong(4, messagePost.getTime_posted_epoch());
+            prpStmt.setInt(1, messagePost.getPosted_by());
+            prpStmt.setString(2, messagePost.getMessage_text());
+            prpStmt.setLong(3, messagePost.getTime_posted_epoch());
             prpStmt.executeUpdate();
 
             ResultSet postResult = prpStmt.getGeneratedKeys();
@@ -144,6 +186,31 @@ public class SocialMediaDAO {
         return null;
     }
 
+    // Delete a message by ID
+    public Message deleteMessagebyID(int id) {
+        Connection connection = ConnectionUtil.getConnection();
+        try {
+            String sql = "SELECT * FROM Message WHERE message_id = ?";
+            PreparedStatement prpStmt = connection.prepareStatement(sql);
+            prpStmt.setInt(1, id);
+            ResultSet oldMessage = prpStmt.executeQuery();
+            if (oldMessage.next()) {
+                Message deletedmessage = new Message(oldMessage.getInt("message_id"),
+                        oldMessage.getInt("posted_by"),
+                        oldMessage.getString("message_text"),
+                        oldMessage.getLong("time_posted_epoch"));
+                String sql2 = "DELETE FROM Message WHERE message_id = ?";
+                PreparedStatement prpStmt2 = connection.prepareStatement(sql2);
+                prpStmt2.setInt(1, id);
+                prpStmt2.executeUpdate();
+                return deletedmessage;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     // Update a message by ID
     public Message updateMessagebyID(Message id) {
         Connection connection = ConnectionUtil.getConnection();
@@ -160,11 +227,11 @@ public class SocialMediaDAO {
                 ResultSet updatedPost = prpStmt2.executeQuery();
                 if (updatedPost.next()) {
                     Message message = new Message(updatedPost.getInt("message_id"),
-                        updatedPost.getInt("posted_by"),
-                        updatedPost.getString("message_text"),
-                        updatedPost.getLong("time_posted_epoch"));
+                            updatedPost.getInt("posted_by"),
+                            updatedPost.getString("message_text"),
+                            updatedPost.getLong("time_posted_epoch"));
                     return message;
-                }                
+                }
             }
         } catch (SQLException e) {
             System.out.println(e);
